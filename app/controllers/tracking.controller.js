@@ -11,18 +11,22 @@ var config     = require('../../config/config.json')
  * @return  void
  */
 exports.tracking = function (req, res) {
-  if (utils.isHostAuthorized(config.whitelist, req.hostname) < 0 ||
+  if (utils.isHostAuthorized(config.whitelist, utils.getHostName(req.headers['referer'])) < 0 ||
     typeof req.param('t') === 'undefined' || 
     typeof req.param('d') === 'undefined') {
     utils.respondPixel(res);
+    console.log('not author',req.hostname);
     return;
   }
+
+  console.log('here')
 
   var params = {
     tracking_data : JSON.parse(req.param('d')),
     environment   : utils.escape(req.param('e')),
     user_agent    : useragent.parse(req.headers['user-agent']).toJSON(),
-    referrer      : utils.escape(req.protocol + '://' + req.headers['host']),
+    //referrer      : utils.escape(req.protocol + '://' + req.headers['host']),
+    referrer      : req.headers['referer'],
     resolution    : utils.escape(req.param('cw')+ 'x'+ req.param('ch')),
     created_at    : new Date(),
     type          : parseInt(utils.escape(req.param('t')), 10)
@@ -34,7 +38,7 @@ exports.tracking = function (req, res) {
       utils.respondPixel(res);
       return console.error(err);
     }
-    console.log(('A tracking report has been caught successfully from '+ req.headers['host']).green);
+    console.log(('A tracking report has been caught successfully from '+ req.headers['referer']).green);
     utils.respondPixel(res);
   });
 };
